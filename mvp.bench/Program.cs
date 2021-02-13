@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BenchmarkDotNet.Running;
+using System;
 
 namespace mvp.bench
 {
@@ -6,7 +7,8 @@ namespace mvp.bench
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var summary = BenchmarkRunner.Run<TestBenchmark1>();
+            Console.WriteLine(summary);
         }
     }
 }
