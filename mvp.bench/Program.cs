@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Intrinsics.X86;
 
 namespace mvp.bench
 {

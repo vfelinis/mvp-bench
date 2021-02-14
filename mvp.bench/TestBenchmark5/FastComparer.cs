@@ -30,21 +30,23 @@ namespace mvp.bench
             int vectorSize = 4;
             if (span.Length >= (vectorSize * 2))
             {
-                int* ptr = (int*)Unsafe.AsPointer(ref span[0]);
-                var maxVector = Sse41.LoadVector128(ptr + i);
-                for (i = vectorSize; i < span.Length - vectorSize; i += vectorSize)
+                fixed (int* ptr = &span[0])
                 {
-                    var current = Sse41.LoadVector128(ptr + i);
-                    maxVector = Sse41.Max(maxVector, current);
-                }
-
-                Span<int> buffer = stackalloc int[vectorSize];
-                maxVector.AsVector().CopyTo(buffer);
-                for (int k = 0; k < buffer.Length; k++)
-                {
-                    if (buffer[k] > max)
+                    var maxVector = Sse41.LoadVector128(ptr + i);
+                    for (i = vectorSize; i < span.Length - vectorSize; i += vectorSize)
                     {
-                        max = buffer[k];
+                        var current = Sse41.LoadVector128(ptr + i);
+                        maxVector = Sse41.Max(maxVector, current);
+                    }
+
+                    Span<int> buffer = stackalloc int[vectorSize];
+                    maxVector.AsVector().CopyTo(buffer);
+                    for (int k = 0; k < buffer.Length; k++)
+                    {
+                        if (buffer[k] > max)
+                        {
+                            max = buffer[k];
+                        }
                     }
                 }
             }
@@ -58,5 +60,44 @@ namespace mvp.bench
             }
             return max;
         }
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public int FastMax(Span<int> span)
+        //{
+        //    int max = span[0];
+        //    int i = 0;
+        //    int vectorSize = Vector<int>.Count;
+        //    if (span.Length >= (vectorSize * 2))
+        //    {
+        //        var maxVector = new Vector<int>(span.Slice(i, vectorSize));
+        //        for (i = vectorSize; i <= span.Length - vectorSize; i += vectorSize)
+        //        {
+        //            var current = new Vector<int>(span.Slice(i, vectorSize));
+        //            if (Vector.GreaterThanAny(current, maxVector))
+        //            {
+        //                maxVector = current;
+        //            }
+        //        }
+
+        //        Span<int> buffer = stackalloc int[vectorSize];
+        //        maxVector.CopyTo(buffer);
+        //        for (int k = 0; k < buffer.Length; k++)
+        //        {
+        //            if (buffer[k] > max)
+        //            {
+        //                max = buffer[k];
+        //            }
+        //        }
+        //    }
+
+        //    for (; i < span.Length; i++)
+        //    {
+        //        if (span[i] > max)
+        //        {
+        //            max = span[i];
+        //        }
+        //    }
+        //    return max;
+        //}
     }
 }
