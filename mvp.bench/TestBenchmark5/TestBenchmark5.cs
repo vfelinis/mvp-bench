@@ -48,7 +48,7 @@ namespace mvp.bench
         public IEnumerable<List<int>> Data()
         {
             yield return Enumerable.Range(0, 100000).Select((s, i) => _random.Next(0, 100000)).ToList();
-            //yield return Enumerable.Range(0, 100000).Select((s, i) => new Account(s.ToString(), _random.Next(0, 100000))).ToArray();
+            //yield return Enumerable.Range(0, 100000).Select((s, i) => new Account(s.ToString(), _random.Next(0, 100000))).ToList();
         }
 
         [Benchmark(Baseline = true)]
@@ -74,9 +74,9 @@ namespace mvp.bench
 
         [Benchmark]
         [ArgumentsSource(nameof(Data))]
-        public int MyMax(List<int> items)
+        public int MyFastMax(List<int> items)
         {
-            return items.AsSpan().MyMax5(default(IntComparer5));
+            return items.AsSpan().MyFastMax(default(IntFastComparer));
         }
     }
 }

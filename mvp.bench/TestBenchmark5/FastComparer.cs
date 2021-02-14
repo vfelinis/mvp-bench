@@ -1,4 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace mvp.bench
 {
@@ -6,7 +9,7 @@ namespace mvp.bench
     {
         bool IsMore(T left, T right);
         bool IsFastMaxSupport { get; }
-        bool FastMax(T left, T right);
+        T FastMax(Span<T> span);
     }
 
     public readonly struct IntFastComparer : IFastComparer<int>
@@ -20,25 +23,23 @@ namespace mvp.bench
         public bool IsFastMaxSupport => true;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FastMax(Span<int> span)
+        public unsafe int FastMax(Span<int> span)
         {
             int max = span[0];
             int i = 0;
-            int vectorSize = Vector<int>.Count;
+            int vectorSize = 4;
             if (span.Length >= (vectorSize * 2))
             {
-                var maxVector = new Vector<int>(span.Slice(i, vectorSize));
-                for (i = vectorSize; i <= span.Length - vectorSize; i += vectorSize)
+                int* ptr = (int*)Unsafe.AsPointer(ref span[0]);
+                var maxVector = Sse41.LoadVector128(ptr + i);
+                for (i = vectorSize; i < span.Length - vectorSize; i += vectorSize)
                 {
-                    var current = new Vector<int>(span.Slice(i, vectorSize));
-                    if (Vector.GreaterThanAny(current, maxVector))
-                    {
-                        maxVector = current;
-                    }
+                    var current = Sse41.LoadVector128(ptr + i);
+                    maxVector = Sse41.Max(maxVector, current);
                 }
 
                 Span<int> buffer = stackalloc int[vectorSize];
-                maxVector.CopyTo(buffer);
+                maxVector.AsVector().CopyTo(buffer);
                 for (int k = 0; k < buffer.Length; k++)
                 {
                     if (buffer[k] > max)
